@@ -24,10 +24,10 @@ namespace WinFormsApp2
 
         static string byName = "lol/summoner/v4/summoners/by-name/";
         static string getGameId = "lol/spectator/v4/active-games/by-summoner/";
-        const string userName = "농고 심스트";
-        const string api_key = "your api_key_input";
+        string userName = "";
+        const string api_key = "input _ your api_key";
         const string getChampionId = "http://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/champion.json";
-
+        const string championsImg = "http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/Aatrox.png";
         Dictionary<string,string> championTable = new Dictionary<string,string>();
         public Form1()
         {
@@ -47,12 +47,32 @@ namespace WinFormsApp2
                 // 챔피언 이름 & 아이디 저장
                 var championList = index.First["key"].ToString();
                 championTable[index.First["key"].ToString()] = index.First["id"].ToString();
+                Download(index.First["id"].ToString());
             }
-            
+        }
+        private void Download(string championName)
+        {
+            DirectoryInfo di = new DirectoryInfo(Application.StartupPath + @$"Images\{championName}.png");
+            string url = string.Format(@"http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/{0}.png", championName);
+            if(di.Exists == false)
+            {
+                return;
+            }
+            try
+            {
+                using(WebClient client = new WebClient())
+                {
+                     client.DownloadFile(new Uri(url),di.ToString());
+                }  
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
         private void button1_Click(object sender, EventArgs e)
         {
-
+            userName = textBoxNameInput.Text;
             string url = string.Format(@"{0}{1}{2}?api_key={3}", targetURL, byName, userName, api_key);
             string result = getResults(url);
 
@@ -76,6 +96,9 @@ namespace WinFormsApp2
                 }
 
                 Root cur = JsonSerializer.Deserialize<Root>(result);
+                FormInGame form = new FormInGame(cur, championTable);
+                form.Show();
+
                 for (int i = 0; i < 5; i++)
                 {
                     listBox1.Items.Add(cur.participants[i].summonerName + "   " + championTable[cur.participants[i].championId.ToString()]);
@@ -111,6 +134,12 @@ namespace WinFormsApp2
             }
             return result;
         }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
     }
     class User
     {

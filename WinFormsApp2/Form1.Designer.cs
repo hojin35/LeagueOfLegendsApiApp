@@ -34,13 +34,14 @@ namespace WinFormsApp2
             this.button2 = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.listBox2 = new System.Windows.Forms.ListBox();
+            this.textBoxNameInput = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(505, 59);
+            this.button1.Location = new System.Drawing.Point(501, 156);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(177, 94);
+            this.button1.Size = new System.Drawing.Size(181, 94);
             this.button1.TabIndex = 0;
             this.button1.Text = "button1";
             this.button1.UseVisualStyleBackColor = true;
@@ -50,7 +51,7 @@ namespace WinFormsApp2
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("맑은 고딕", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.label1.Location = new System.Drawing.Point(45, 59);
+            this.label1.Location = new System.Drawing.Point(45, 44);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(39, 15);
             this.label1.TabIndex = 1;
@@ -58,7 +59,7 @@ namespace WinFormsApp2
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(501, 194);
+            this.button2.Location = new System.Drawing.Point(501, 259);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(181, 95);
             this.button2.TabIndex = 2;
@@ -84,11 +85,19 @@ namespace WinFormsApp2
             this.listBox2.Size = new System.Drawing.Size(409, 164);
             this.listBox2.TabIndex = 4;
             // 
+            // textBoxNameInput
+            // 
+            this.textBoxNameInput.Location = new System.Drawing.Point(501, 123);
+            this.textBoxNameInput.Name = "textBoxNameInput";
+            this.textBoxNameInput.Size = new System.Drawing.Size(181, 27);
+            this.textBoxNameInput.TabIndex = 5;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.textBoxNameInput);
             this.Controls.Add(this.listBox2);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.button2);
@@ -109,6 +118,7 @@ namespace WinFormsApp2
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.ListBox listBox1;
         private System.Windows.Forms.ListBox listBox2;
+        private System.Windows.Forms.TextBox textBoxNameInput;
     }
 }
 
