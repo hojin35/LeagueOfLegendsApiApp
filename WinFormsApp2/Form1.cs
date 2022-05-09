@@ -20,23 +20,38 @@ namespace WinFormsApp2
 
     public partial class Form1 : Form
     {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
         static string targetURL = "https://kr.api.riotgames.com/";
 
         static string byName = "lol/summoner/v4/summoners/by-name/";
         static string getGameId = "lol/spectator/v4/active-games/by-summoner/";
         string userName = "";
-        const string api_key = "input _ your api_key";
+        const string api_key = "RGAPI-3829a2b6-8a1b-47ff-b30f-ce52cb97f972";
         const string getChampionId = "http://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/champion.json";
-        const string championsImg = "http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/Aatrox.png";
+        const string getSellId = "https://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/summoner.json";
+        //const string championsImg = "http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/Aatrox.png";
         Dictionary<string,string> championTable = new Dictionary<string,string>();
-        public Form1()
-        {
-            InitializeComponent();
-        }
+        Dictionary<string,string> spellTable = new Dictionary<string,string>();
+        
         User u = new User();
         private void Form1_Load(object sender, EventArgs e)
         {
             GetChampionId();
+            GetSpellId();
+        }
+        private void GetSpellId()
+        {
+            string result = getResults(getSellId);
+            var list = JObject.Parse(result);
+            foreach(var index in list["data"])
+            {
+                spellTable[index.First["key"].ToString()] = index.First["id"].ToString();
+                DownloadSpell(index.First["id"].ToString());
+            }
         }
         private void GetChampionId()
         {
@@ -70,16 +85,42 @@ namespace WinFormsApp2
                 Console.WriteLine(e.Message);
             }
         }
+        private void DownloadSpell (string spellName)
+        {
+            DirectoryInfo di = new DirectoryInfo(Application.StartupPath + @$"Images\Spells\{spellName}.png");
+            string url = string.Format(@"http://ddragon.leagueoflegends.com/cdn/12.8.1/img/spell/{0}.png", spellName);
+            if (di.Exists == true)
+            {
+                return;
+            }
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(new Uri(url), di.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             userName = textBoxNameInput.Text;
             string url = string.Format(@"{0}{1}{2}?api_key={3}", targetURL, byName, userName, api_key);
             string result = getResults(url);
 
+            if(result == "")
+            {
+                label1.Text = "존재하지 않는 사용자입니다";
+                return;
+            }
             var a = JObject.Parse(result);
 
             label1.Text = a["id"].ToString();
             u.Id = a["id"].ToString();
+            u.UserName = userName;
         }
 
 
@@ -94,19 +135,31 @@ namespace WinFormsApp2
                     label1.Text = "현재 게임중이 아닙니다.";
                     return;
                 }
+                
 
                 Root cur = JsonSerializer.Deserialize<Root>(result);
-                FormInGame form = new FormInGame(cur, championTable);
-                form.Show();
 
                 for (int i = 0; i < 5; i++)
                 {
+                    if (u.UserName == cur.participants[i].summonerName)
+                    {
+                        u.EnemyTeam = u.Red;
+                    }
                     listBox1.Items.Add(cur.participants[i].summonerName + "   " + championTable[cur.participants[i].championId.ToString()]);
                 }
                 for (int i = 5; i < 10; i++)
                 {
+                    if (u.UserName == cur.participants[i].summonerName)
+                    {
+                        u.EnemyTeam = u.Blue;
+                    }
                     listBox2.Items.Add(cur.participants[i].summonerName + "   " + championTable[cur.participants[i].championId.ToString()]);
                 }
+
+                FormInGame form = new FormInGame(cur, championTable,spellTable,u.EnemyTeam);
+                form.Show();
+
+               
             }
         }
         public static string getResults(string url)
@@ -143,6 +196,14 @@ namespace WinFormsApp2
     }
     class User
     {
+        public int Blue
+        {
+            get { return 0; }
+        }
+        public int Red
+        {
+            get { return 5; }
+        }
         public string Id
         {
             get; set;
@@ -150,6 +211,10 @@ namespace WinFormsApp2
         public string UserName
         {
             get; set;
+        }
+        public int EnemyTeam
+        {
+            get;set;
         }
     }
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
