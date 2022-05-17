@@ -59,15 +59,5 @@ namespace WinFormsApp2.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Aatrox {
-            get {
-                object obj = ResourceManager.GetObject("Aatrox", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }

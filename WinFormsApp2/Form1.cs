@@ -30,66 +30,60 @@ namespace WinFormsApp2
         static string byName = "lol/summoner/v4/summoners/by-name/";
         static string getGameId = "lol/spectator/v4/active-games/by-summoner/";
         string userName = "";
-        const string api_key = "RGAPI-3829a2b6-8a1b-47ff-b30f-ce52cb97f972";
+        const string api_key = "your APi Key Input";
         const string getChampionId = "http://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/champion.json";
         const string getSellId = "https://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/summoner.json";
-        //const string championsImg = "http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/Aatrox.png";
-        Dictionary<string,string> championTable = new Dictionary<string,string>();
-        Dictionary<string,string> spellTable = new Dictionary<string,string>();
-        
+        Dictionary<string, string> championTable = new Dictionary<string, string>();
+        Dictionary<string, string>spellTable = new Dictionary<string, string>();
+        Dictionary<string, int>spellCoolTimeTable = new Dictionary<string, int>();
+
         User u = new User();
+        Task k;
+        Task k2;
         private void Form1_Load(object sender, EventArgs e)
         {
-            GetChampionId();
-            GetSpellId();
+            k = GetChampionId();
+            k2 = GetSpellId();
         }
-        private void GetSpellId()
+        private async Task GetSpellId()
         {
             string result = getResults(getSellId);
             var list = JObject.Parse(result);
-            foreach(var index in list["data"])
-            {
-                spellTable[index.First["key"].ToString()] = index.First["id"].ToString();
-                DownloadSpell(index.First["id"].ToString());
-            }
+            await Task.Run(() =>
+           {
+               foreach (var index in list["data"])
+               {
+                   spellTable[index.First["key"].ToString()] = index.First["id"].ToString();
+                   spellCoolTimeTable[index.First["key"].ToString()] = int.Parse(index.First["cooldownBurn"].ToString());
+
+                   
+                   DownloadSpell(index.First["id"].ToString());
+               }
+           });
+
         }
-        private void GetChampionId()
+        
+        private async Task GetChampionId()
         {
             string result = getResults(getChampionId);
             var list = JObject.Parse(result);
-            foreach(var index in list["data"])
+            await Task.Run(() =>
             {
-                // 챔피언 이름 & 아이디 저장
-                var championList = index.First["key"].ToString();
-                championTable[index.First["key"].ToString()] = index.First["id"].ToString();
-                Download(index.First["id"].ToString());
-            }
+                foreach (var index in list["data"])
+                {
+                    // 챔피언 이름 & 아이디 저장
+                    var championList = index.First["key"].ToString();
+                    championTable[index.First["key"].ToString()] = index.First["id"].ToString();
+                    Download(index.First["id"].ToString());
+                }
+            });
+
         }
         private void Download(string championName)
         {
-            DirectoryInfo di = new DirectoryInfo(Application.StartupPath + @$"Images\{championName}.png");
+            FileInfo fi = new FileInfo(Application.StartupPath + @$"Images\Champions\{championName}.png");
             string url = string.Format(@"http://ddragon.leagueoflegends.com/cdn/12.8.1/img/champion/{0}.png", championName);
-            if(di.Exists == false)
-            {
-                return;
-            }
-            try
-            {
-                using(WebClient client = new WebClient())
-                {
-                     client.DownloadFile(new Uri(url),di.ToString());
-                }  
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-        }
-        private void DownloadSpell (string spellName)
-        {
-            DirectoryInfo di = new DirectoryInfo(Application.StartupPath + @$"Images\Spells\{spellName}.png");
-            string url = string.Format(@"http://ddragon.leagueoflegends.com/cdn/12.8.1/img/spell/{0}.png", spellName);
-            if (di.Exists == true)
+            if (fi.Exists == true)
             {
                 return;
             }
@@ -97,7 +91,27 @@ namespace WinFormsApp2
             {
                 using (WebClient client = new WebClient())
                 {
-                    client.DownloadFile(new Uri(url), di.ToString());
+                    client.DownloadFile(new Uri(url), fi.ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+        private void DownloadSpell(string spellName)
+        {
+            FileInfo fi = new FileInfo(Application.StartupPath + @$"Images\Spells\{spellName}.png");
+            string url = string.Format(@"http://ddragon.leagueoflegends.com/cdn/12.8.1/img/spell/{0}.png", spellName);
+            if (fi.Exists == true)
+            {
+                return;
+            }
+            try
+            {
+                using (WebClient client = new WebClient())
+                {
+                    client.DownloadFile(new Uri(url), fi.ToString());
                 }
             }
             catch (Exception e)
@@ -111,7 +125,7 @@ namespace WinFormsApp2
             string url = string.Format(@"{0}{1}{2}?api_key={3}", targetURL, byName, userName, api_key);
             string result = getResults(url);
 
-            if(result == "")
+            if (result == "")
             {
                 label1.Text = "존재하지 않는 사용자입니다";
                 return;
@@ -121,11 +135,17 @@ namespace WinFormsApp2
             label1.Text = a["id"].ToString();
             u.Id = a["id"].ToString();
             u.UserName = userName;
+           
         }
 
 
         private void button2_Click(object sender, EventArgs e)
         {
+            while(!(k.IsCompleted && k2.IsCompleted))
+            {
+                label1.Text = "이미지 로딩중입니다 기다려 주세요!";
+            }
+
             if (u.Id != null)
             {
                 string url = string.Format(@"{0}{1}{2}?api_key={3}", targetURL, getGameId, u.Id, api_key);
@@ -135,7 +155,7 @@ namespace WinFormsApp2
                     label1.Text = "현재 게임중이 아닙니다.";
                     return;
                 }
-                
+
 
                 Root cur = JsonSerializer.Deserialize<Root>(result);
 
@@ -156,10 +176,10 @@ namespace WinFormsApp2
                     listBox2.Items.Add(cur.participants[i].summonerName + "   " + championTable[cur.participants[i].championId.ToString()]);
                 }
 
-                FormInGame form = new FormInGame(cur, championTable,spellTable,u.EnemyTeam);
+                FormInGame form = new FormInGame(cur, championTable, spellTable, u.EnemyTeam, spellCoolTimeTable);
                 form.Show();
 
-               
+
             }
         }
         public static string getResults(string url)
@@ -214,7 +234,7 @@ namespace WinFormsApp2
         }
         public int EnemyTeam
         {
-            get;set;
+            get; set;
         }
     }
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);

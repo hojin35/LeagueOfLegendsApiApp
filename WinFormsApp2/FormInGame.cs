@@ -8,7 +8,8 @@ using System.Windows.Forms;
 using System.Collections;
 using System.IO;
 using System.Threading;
-
+using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 // TODO : Team Selection
 // Me : Red => Enemys : Blue
@@ -19,14 +20,20 @@ namespace WinFormsApp2
     public partial class FormInGame : Form
     {
         int[] timer = new int[10];
-        
-        public FormInGame(Root cur,Dictionary<string,string> championTable, Dictionary<string, string> spellTable,int EnemyTeam)
+        int[] spellCoolTime = new int[10];
+        Thread thread;
+        bool timerStop = false;
+        Dictionary<string, int> spellCoolTimeTable = new Dictionary<string, int>();
+        //Task k;
+        public FormInGame(Root cur,Dictionary<string,string> championTable, Dictionary<string, string> spellTable,int EnemyTeam, Dictionary<string, int> _spellCoolTimeTable)
         {
             InitializeComponent();
-            PictureBox[] pictureBoxes       = { pictureBox1, pictureBox2, pictureBox3, pictureBox4, pictureBox5 };
+            
+            PictureBox[] pictureBoxes = { pictureBox1, pictureBox2, pictureBox3, pictureBox4, pictureBox5 };
             PictureBox [,]pictureBoxesSpell = new PictureBox[2,5]
                                                     { { pictureBox6, pictureBox7, pictureBox8, pictureBox9, pictureBox10 },
-                                                    { pictureBox11, pictureBox12, pictureBox13, pictureBox14, pictureBox15 } };         
+                                                    { pictureBox11, pictureBox12, pictureBox13, pictureBox14, pictureBox15 } };
+            Label[,] labels = { { label1, label2, label3, label4, label5 }, { label6, label7, label8, label9, label10 } };
             for (int i=0;i<5;i++)
             {
                 string di = new DirectoryInfo(Application.StartupPath +
@@ -42,29 +49,23 @@ namespace WinFormsApp2
                     @$"Images\Spells\{spellTable[cur.participants[i + EnemyTeam].spell2Id.ToString()]}.png").ToString();
                 pictureBoxesSpell[1,i].Load(diSpell2);
                 pictureBoxesSpell[1,i].SizeMode = PictureBoxSizeMode.StretchImage;
+
                 pictureBoxesSpell[0,i].Click += pictureBox_Click;
                 pictureBoxesSpell[1,i].Click += pictureBox_Click;
-                
+
+                spellCoolTime[i] = _spellCoolTimeTable[cur.participants[i + EnemyTeam].spell1Id.ToString()];
+                spellCoolTime[i+5] = _spellCoolTimeTable[cur.participants[i + EnemyTeam].spell2Id.ToString()];
             }
-            //Thread thread = new Thread(SpellTimer);
-            //thread.Start(pictureBoxesSpell);
+            //k = SpellTimer(pictureBoxesSpell);
+            thread = new Thread(new ParameterizedThreadStart(SpellTimer));
+            thread.Start(pictureBoxesSpell);
         }
-        private void pictureBox_Click(object sender,EventArgs e)
-        {
-            if(sender is PictureBox pic)
-            {
-                // 여기에 시간 받아서 출력하고 스펠 색 낮추기 
-               timer[pic.TabIndex - 6]+=10;
-                pic.Visible = false;
-            }
-            
-            return;
-        }
-        private void SpellTimer(object obj)
+        
+        public void SpellTimer(object obj)
         {
             PictureBox[,] pictureBoxesSpell = new PictureBox[2, 5];
             pictureBoxesSpell = (PictureBox[,])obj;
-            while(true)
+            while (!timerStop)
             {
                 for (int i = 0; i < 10; i++)
                 {
@@ -73,26 +74,36 @@ namespace WinFormsApp2
                         timer[i] -= 1;
                         if (timer[i] == 0)
                         {
-                            pictureBoxesSpell[i / 5, i % 5].Visible = true;
+                            string labelName = "label" + (i + 1);
+                            Control con = this.Controls[labelName];
+                            con.Invoke(new MethodInvoker(delegate { con.Text = ""; }));
                         }
                         else
                         {
-
+                            string labelName = "label" + (i + 1);
+                            Control con = this.Controls[labelName];
+                            con.Invoke(new  MethodInvoker(delegate { con.Text = timer[i].ToString();}));
                         }
                     }
                 }
                 Thread.Sleep(1000);
             }
-           
         }
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void pictureBox_Click(object sender,EventArgs e)
         {
-
+            if(sender is PictureBox pic)
+            {
+                // 여기에 시간 받아서 출력하고 스펠 색 낮추기 
+               
+                timer[pic.TabIndex - 6]= spellCoolTime[pic.TabIndex - 6];
+            }
+            
+            return;
         }
 
-        private void pictureBox7_Click(object sender, EventArgs e)
+        private void FormInGame_FormClosing(object sender, FormClosingEventArgs e)
         {
-
+            timerStop = true;
         }
     }
     public class ImageList
