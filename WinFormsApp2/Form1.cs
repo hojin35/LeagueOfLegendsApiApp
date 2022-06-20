@@ -30,7 +30,7 @@ namespace WinFormsApp2
         static string byName = "lol/summoner/v4/summoners/by-name/";
         static string getGameId = "lol/spectator/v4/active-games/by-summoner/";
         string userName = "";
-        const string api_key = "your APi Key Input";
+        const string api_key = "RGAPI-e333f330-8a27-4b8c-ba68-e5ae1a65fd50";
         const string getChampionId = "http://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/champion.json";
         const string getSellId = "https://ddragon.leagueoflegends.com/cdn/12.8.1/data/ko_KR/summoner.json";
         Dictionary<string, string> championTable = new Dictionary<string, string>();
@@ -72,7 +72,6 @@ namespace WinFormsApp2
                 foreach (var index in list["data"])
                 {
                     // 챔피언 이름 & 아이디 저장
-                    var championList = index.First["key"].ToString();
                     championTable[index.First["key"].ToString()] = index.First["id"].ToString();
                     Download(index.First["id"].ToString());
                 }
